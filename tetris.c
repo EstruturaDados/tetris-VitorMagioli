@@ -1,19 +1,149 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define MAX 5
+/**
+ * @brief Define a estrutura de uma Peça do tetris
+ * Possui Tipo e um identificador da peça
+ */
+typedef struct {
+    char tipo;
+    int id;
+} Peca;
+
+typedef struct {
+    Peca pecas[MAX];
+    int inicio;
+    int fim;
+    int total;
+} Fila;
+
+int main() {
+    Fila f;
+    int opcao; //variável para o menu
+
+    srand(time(NULL)); //inicializa o gerador de numeros aleatórios
+    inicializar(&f); //inicializa a fila
+    
+
+    printf("==============================\n");
+    printf("        JOGO DE TETRIS        \n");
+    printf("==============================\n");
+    printf("Organize e posicione as peças utilizando estruturas de dados fundamentais como parte das mecânicas de jogo!\n");
+    // Loop principal do menu
+    do {
+        printf("\n-------------------[ MENU PRINCIPAL ]-------------------\n");
+        printf("1. Jogar uma Peça\n");
+        printf("2. Inserir nova Peça\n");
+        printf("0. Sair\n");
+        scanf("%d", &opcao);
+        while (getchar() != '\n');  // Limpa o buffer de entrada (para o caso de o usuário digitar letras)
+
+        switch (opcao)
+        {
+        case 1:
+            if (filaVazia(&f)) {
+                printf("\nFILA VAZIA! Nenhuma peça para jogar.\n");
+            } 
+            else {
+                Peca jogada = retirar(&f);
+                printf("\nPeça jogada! ID: %d, Tipo: %c\n", jogada.id, jogada.tipo);
+            }
+            break;
+        
+        default:
+            break;
+        }
+
+    return 0;
+}
+
+/**
+ * 
+ */
+void inicializar(Fila *f){
+    f->inicio = 0;
+    f->fim = 0;
+    f->total = 0;
+}
+
+int filaCheia(Fila *f){
+    return f->total == MAX;
+}
+
+int filaVazia(Fila *f){
+    return f->total == 0;
+}
+
+void inserir(Fila *f, Peca p){
+    if(filaCheia(f)){ //encerra a execução se a fila estiver cheia
+        // Adiciona um feedback para o usuário
+        printf("\nERRO: Fila cheia. Não foi possível inserir.\n");
+        return;
+    }
+    f->pecas[f->fim] = p;           //insere a peça no final
+    f->fim = (f->fim +1) % MAX;     //atualiza a fila circular
+    f->total++;                     //faz a contagem de peças
+}
+
+Peca retirar(Fila *f){
+    Peca vazia = {' ',-1};              //valor padrão caso a fila esteja vazia
+    if(filaVazia(f))
+        return vazia;              //evita remoção se já estiver vazia
+    Peca p = f->pecas[f->inicio];  //armazena o item a ser removido
+    f->inicio = (f->inicio +1) % MAX; //atualiza a fila circular
+    f->total--;                    //faz o decremento da contagem das peças da fila
+    return p;                      //retorna a peça removida
+}
+
+void mostrarFila(Fila *f){
+    if(filaVazia(f)){
+        printf("Fila: [ VAZIA ]\n");
+        return;
+    }
+    printf("Fila: ");
+    // Este loop imprime os elementos na ordem correta da fila circular
+    for(int i = 0, idx = f->inicio; i < f->total; i++, idx = (idx+1) % MAX){
+        printf("[%d]: [%c]\n", f->pecas[idx].id, f->pecas[idx].tipo);
+    }
+    printf("\n");
+}
+
+void gerarPeca(Peca *p){
+    // 1. GERAÇÃO DO ID SEQUENCIAL
+    // 'static' faz com que a variável 'proximo_id' mantenha seu valor
+    // mesmo depois que a função termina.
+    static int proximo_id = 1;
+
+    // Atribui o ID sequencial usando o ponteiro
+    p->id = proximo_id;
+
+    proximo_id++; // Prepara o ID para a próxima peça
+
+    // 2. GERAÇÃO DO TIPO ALEATÓRIO (Peças de Tetris)
+    // Lista de tipos de peça (como chars)
+    const char tiposDePeca[] = {'I', 'O', 'T', 'S', 'Z', 'J', 'L'};
+
+    // sizeof(tiposDePeca) retorna o número de bytes (que é 7, pois são 7 chars)
+    int numTipos = sizeof(tiposDePeca); 
+
+    // rand() % numTipos gera um número aleatório entre 0 e 6
+    int indiceAleatorio = rand() % numTipos;
+
+    // Atribui o tipo aleatório à peça usando o ponteiro
+    p->tipo = tiposDePeca[indiceAleatorio];
+}
+
 
 // Desafio Tetris Stack
 // Tema 3 - Integração de Fila e Pilha
 // Este código inicial serve como base para o desenvolvimento do sistema de controle de peças.
 // Use as instruções de cada nível para desenvolver o desafio.
 
-int main() {
-
-    // 🧩 Nível Novato: Fila de Peças Futuras
-    //
-    // - Crie uma struct Peca com os campos: tipo (char) e id (int).
-    // - Implemente uma fila circular com capacidade para 5 peças.
-    // - Crie funções como inicializarFila(), enqueue(), dequeue(), filaCheia(), filaVazia().
+  // 🧩 Nível Novato: Fila de Peças Futuras
     // - Cada peça deve ser gerada automaticamente com um tipo aleatório e id sequencial.
-    // - Exiba a fila após cada ação com uma função mostrarFila().
     // - Use um menu com opções como:
     //      1 - Jogar peça (remover da frente)
     //      0 - Sair
@@ -49,8 +179,3 @@ int main() {
     // - O menu deve ficar assim:
     //      4 - Trocar peça da frente com topo da pilha
     //      5 - Trocar 3 primeiros da fila com os 3 da pilha
-
-
-    return 0;
-}
-
