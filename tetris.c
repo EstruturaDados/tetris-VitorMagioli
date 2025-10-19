@@ -20,6 +20,15 @@ typedef struct {
     int total;
 } Fila;
 
+// --- PROTÓTIPOS DAS FUNÇÕES ---
+void inicializar(Fila *f);
+int filaCheia(Fila *f);
+int filaVazia(Fila *f);
+void inserir(Fila *f, Peca p);
+Peca retirar(Fila *f);
+void mostrarFila(Fila *f);
+void gerarPeca(Peca *p); 
+
 int main() {
     Fila f;
     int opcao; //variável para o menu
@@ -43,25 +52,46 @@ int main() {
 
         switch (opcao)
         {
-        case 1:
-            if (filaVazia(&f)) {
-                printf("\nFILA VAZIA! Nenhuma peça para jogar.\n");
-            } 
-            else {
-                Peca jogada = retirar(&f);
-                printf("\nPeça jogada! ID: %d, Tipo: %c\n", jogada.id, jogada.tipo);
-            }
-            break;
-        
-        default:
-            break;
-        }
+            case 1: // Jogar uma Peça
+                if (filaVazia(&f)) {
+                    printf("\nFILA VAZIA! Nenhuma peça para jogar.\n");
+                } 
+                else {
+                    Peca jogada = retirar(&f);
+                    printf("\nPeça jogada! ID: %d, Tipo: %c\n", jogada.id, jogada.tipo);
+                }
+                mostrarFila(&f);
+                break;
+            
+            case 2: //Inserir uma peça
+                
+                if (filaCheia(&f)) {
+                    printf("\nFILA CHEIA! Jogue uma peça antes de gerar outra.\n");
+                } else {
+                    Peca nova;        // 1. Cria uma struct de peça vazia
+                    gerarPeca(&nova); // 2. Passa o endereço para a função preenchê-la
+                    inserir(&f, nova);// 3. Insere a peça preenchida na fila
+                    printf("\nNova peça gerada! ID: %d, Tipo: %c\n", nova.id, nova.tipo);
+                }
+                mostrarFila(&f);
+                break;
+
+            case 0:
+                printf("\nSaindo do jogo...\n");
+                break;
+
+            default:
+                printf("\nOpção inválida!\n");
+                break;
+        } 
+    } while (opcao != 0); // Fim do loop do-while
 
     return 0;
 }
 
+//==============INICIO DAS FUNÇÕES===================//
 /**
- * 
+ * Inicializa a fila
  */
 void inicializar(Fila *f){
     f->inicio = 0;
@@ -103,7 +133,7 @@ void mostrarFila(Fila *f){
         printf("Fila: [ VAZIA ]\n");
         return;
     }
-    printf("Fila: ");
+    printf("Fila Atual: \n");
     // Este loop imprime os elementos na ordem correta da fila circular
     for(int i = 0, idx = f->inicio; i < f->total; i++, idx = (idx+1) % MAX){
         printf("[%d]: [%c]\n", f->pecas[idx].id, f->pecas[idx].tipo);
@@ -141,15 +171,6 @@ void gerarPeca(Peca *p){
 // Tema 3 - Integração de Fila e Pilha
 // Este código inicial serve como base para o desenvolvimento do sistema de controle de peças.
 // Use as instruções de cada nível para desenvolver o desafio.
-
-  // 🧩 Nível Novato: Fila de Peças Futuras
-    // - Cada peça deve ser gerada automaticamente com um tipo aleatório e id sequencial.
-    // - Use um menu com opções como:
-    //      1 - Jogar peça (remover da frente)
-    //      0 - Sair
-    // - A cada remoção, insira uma nova peça ao final da fila.
-
-
 
     // 🧠 Nível Aventureiro: Adição da Pilha de Reserva
     //
