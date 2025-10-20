@@ -48,24 +48,26 @@ void gerarPeca(Peca *p);
 void reservarPeca(Pilha *p, Peca nova);
 void usarPeca(Pilha *p, Peca *usada);
 void mostrarPilha(Pilha *p);
-
+void pausa();
 
 
 int main() {
-    Fila f;
-    Pilha p;
+    Fila f, fReserva;
+    Pilha p, pAuxiliar;
     int opcao; //variável para o menu
 
     srand(time(NULL)); //inicializa o gerador de numeros aleatórios
     inicializar(&f); //inicializa a fila
+    inicializar(&fReserva);
     inicializarPilha(&p);
+    inicializarPilha(&pAuxiliar);
 
     //Cria a fila das peças para o jogador começar com as opções
-    for(int i; i < MAX_PECA; i++){
+    for(int i = 0; i < MAX_PECA; i++){
         Peca nova;        // 1. Cria uma struct de peça vazia
         gerarPeca(&nova); // 2. Passa o endereço para a função preenchê-la
         inserir(&f, nova);// 3. Insere a peça preenchida na fila
-        printf("\nNova peça gerada! ID: %d, Tipo: %c\n", nova.id, nova.tipo);
+        //printf("\nNova peça gerada! ID: %d, Tipo: %c\n", nova.id, nova.tipo);
     }
     
 
@@ -75,13 +77,16 @@ int main() {
     printf("Organize e posicione as peças!\n");
     // Loop principal do menu
     do {
+        printf("\n--------[ PEÇA RESERVADA ]--------\n");
+        mostrarPilha(&p); 
         printf("\n--------[ PRÓXIMAS PEÇAS ]--------\n");
         mostrarFila(&f); //mostra a fila atual
-        mostrarPilha(&p); 
         printf("\n--------[ MENU PRINCIPAL ]--------\n");
         printf("1. Jogar uma Peça\n");
         printf("2. Reservar uma Peça\n");
         printf("3. Usar Peça reservada\n");
+        printf("4. Trocar Peça pela Peça reserva\n");
+        printf("5. Trocar as 3 primeiras peças pelas peças reservas\n");
         printf("0. Sair\n");
         printf("Escolha a opção desejada: ");
         scanf("%d", &opcao);
@@ -90,6 +95,10 @@ int main() {
         switch (opcao)
         {
             case 1: { // Jogar uma Peça
+                if (filaVazia(&f)) {
+                    printf("\n[ERRO] Fila vazia! Não há peça para jogar.\n");
+                    break; 
+                }
                 //1. Retirar a peça do início
                 Peca jogada = retirar(&f);
                 printf("\nPeça jogada! ID: %d, Tipo: %c\n", jogada.id, jogada.tipo);
@@ -100,7 +109,7 @@ int main() {
                 inserir(&f, nova);
                 printf("Nova peça (ID: %d, Tipo: %c) gerada e adicionada ao final da fila.\n", nova.id, nova.tipo);
                 
-                mostrarFila(&f);
+                pausa();
                 break;
             }           
             case 2:{
@@ -125,6 +134,8 @@ int main() {
                 gerarPeca(&nova);
                 inserir(&f, nova);
                 printf("Nova peça (ID: %d, Tipo: %c) gerada e adicionada ao final da fila.\n", nova.id, nova.tipo);
+                
+                pausa();
                 break;
             }
 
@@ -136,8 +147,79 @@ int main() {
                     // A função 'usarPeca' remove da pilha e imprime a mensagem
                     usarPeca(&p, &pecaUsada);
                 }
+                pausa();
                 break;
             }
+            case 4:{
+                if (filaVazia(&f) || pilhaVazia(&p)) {
+                    printf("\n[ERRO] A Fila e a Pilha precisam ter pelo menos 1 peça para trocar!\n");
+                    break;
+                }
+                // 1. Retira as peças de ambas as estruturas
+                Peca pecadaFila = retirar(&f); //retira a peça da fila e guarda na variável
+                Peca pecadaPilha;
+                usarPeca(&p, &pecadaPilha); // 'usarPeca' remove do topo
+
+                // 2. Insere as peças nos locais opostos
+                reservarPeca(&p, pecadaFila); //peça da fila vai para pilha
+                inserir(&f, pecadaPilha); //peça da pilha vai para fila
+
+                printf("Troca concluída com sucesso!\n");
+                pausa();
+                break;
+            }
+            case 5:{
+                printf("\nExecutando troca múltipla (3x3)...\n");
+                // 1. Verifica se ambas as estruturas têm 3 peças
+                if(f.total < 3 || p.topo < 2){  // p.topo < 2 significa (índices 0, 1, 2) = 3 peças
+                    printf("[ERRO] A fila e a pilha precisam ter pelo menos 3 peças para esta troca!\n");
+                    break;
+                }
+                // 2. Move as 3 peças da Fila 'f' para a Pilha Auxiliar 'pAuxiliar'
+                // Inverte a ordem delas: a primeira da fila [I 0] vai para o fundo da pilha aux)
+                reservarPeca(&pAuxiliar, retirar(&f));
+                reservarPeca(&pAuxiliar, retirar(&f));
+                reservarPeca(&pAuxiliar, retirar(&f));
+
+                // 3. Move as 3 peças da Pilha 'p' para a Fila Reserva 'fReserva'
+                // (Isso mantém a ordem: a do topo [O 8] vai para o início da fila reserva)
+                Peca pecaTemp;
+                usarPeca(&p, &pecaTemp);
+                inserir(&fReserva, pecaTemp);
+                usarPeca(&p, &pecaTemp);
+                inserir(&fReserva, pecaTemp);
+                usarPeca(&p, &pecaTemp);
+                inserir(&fReserva, pecaTemp);
+
+                // 4. Mover o RESTO da Fila 'f' para o FIM da Fila Reserva 'fReserva'
+                // (Isso coloca as peças [O 3] e [I 4] no final da fReserva)
+                while(!filaVazia(&f)){
+                    inserir(&fReserva, retirar(&f));
+                }
+
+                // 5. Move a Fila Reserva 'fReserva' (agora na ordem final) de volta para a Fila 'f'
+                while (!filaVazia(&fReserva))
+                {
+                    inserir(&f, retirar(&fReserva));
+                }
+
+                // 6. Move de pAuxiliar (Pilha) para fReserva (Fila)
+                // fReserva (Frente->Fim) se torna: [T 2] [L 1] [I 0]
+                while(!pilhaVazia(&pAuxiliar)){
+                    Peca tempAux;
+                    usarPeca(&pAuxiliar, &tempAux);
+                    inserir(&fReserva, tempAux);
+                }
+
+                // 7. Mover de fReserva (Fila) de volta para p (Pilha)
+                // p (Topo->Base) se torna: [T 2] [L 1] [I 0]
+                while(!filaVazia(&fReserva)) {
+                    reservarPeca(&p, retirar(&fReserva));
+                }
+                printf("Troca múltipla concluída!\n");
+                pausa();
+            }
+            break;
             case 0:
                 printf("\nSaindo do jogo...\n");
                 break;
@@ -152,6 +234,10 @@ int main() {
 }
 
 //==============INICIO DAS FUNÇÕES===================//
+void pausa() {
+    printf("\nPressione [ENTER] para continuar...");
+    getchar(); // Espera o usuário pressionar Enter
+}
 /**
  * Inicializa a fila
  */
@@ -273,7 +359,7 @@ void usarPeca(Pilha *p, Peca *usada){
 
 void mostrarPilha(Pilha *p){
     if(pilhaVazia(p)){
-        printf("[PILHA VAZIA] Gere uma peça (Opção 1) primeiro.\n");
+        printf("Reserva: [VAZIA]\n");
     }
     printf("Peças reservadas:\n");
     printf("Peça - Ordem\n");
@@ -291,22 +377,12 @@ void mostrarPilha(Pilha *p){
 // Use as instruções de cada nível para desenvolver o desafio.
 
     // 🧠 Nível Aventureiro: Adição da Pilha de Reserva
-    //
-    // - Implemente uma pilha linear com capacidade para 3 peças.
-    // - Crie funções como inicializarPilha(), push(), pop(), pilhaCheia(), pilhaVazia().
-    // - Permita enviar uma peça da fila para a pilha (reserva).
-    // - Crie um menu com opção:
-    //      2 - Enviar peça da fila para a reserva (pilha)
-    //      3 - Usar peça da reserva (remover do topo da pilha)
-    // - Exiba a pilha junto com a fila após cada ação com mostrarPilha().
-    // - Mantenha a fila sempre com 5 peças (repondo com gerarPeca()).
 
 
     // 🔄 Nível Mestre: Integração Estratégica entre Fila e Pilha
     //
     // - Implemente interações avançadas entre as estruturas:
-    //      4 - Trocar a peça da frente da fila com o topo da pilha
-    //      5 - Trocar os 3 primeiros da fila com as 3 peças da pilha
+
     // - Para a opção 4:
     //      Verifique se a fila não está vazia e a pilha tem ao menos 1 peça.
     //      Troque os elementos diretamente nos arrays.
